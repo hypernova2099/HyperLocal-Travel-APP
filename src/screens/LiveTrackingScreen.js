@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { busService } from '../api/services';
@@ -24,16 +25,7 @@ const LiveTrackingScreen = ({ route, navigation }) => {
 
   const loadRouteDetails = async () => {
     if (!selectedRoute?.routeId) {
-      // Mock data if no route selected
-      setRouteDetails({
-        stops: [
-          { id: 'stop_1', name: 'Start Point', time: '10:00 AM', distance: 0 },
-          { id: 'stop_2', name: 'Marine Drive', time: '10:15 AM', distance: 5 },
-          { id: 'stop_3', name: 'Vyttila Hub', time: '10:30 AM', distance: 10 },
-          { id: 'stop_4', name: 'Kakkanad', time: '10:45 AM', distance: 16 },
-        ],
-        totalDistance: 16,
-      });
+      Alert.alert('Error', 'No route selected');
       setLoading(false);
       return;
     }
@@ -44,6 +36,10 @@ const LiveTrackingScreen = ({ route, navigation }) => {
       setRouteDetails(data);
     } catch (error) {
       console.error('Error loading route details:', error);
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to fetch route details. Please try again.';
+      Alert.alert('Error', errorMessage, [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
     } finally {
       setLoading(false);
     }

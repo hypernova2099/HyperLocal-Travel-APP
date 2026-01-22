@@ -63,7 +63,8 @@ const PlanTripScreen = ({ navigation }) => {
       });
     } catch (error) {
       console.error('Error planning trip:', error);
-      Alert.alert('Error', 'Failed to plan trip. Please try again.');
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to fetch route options. Please check your connection and try again.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }

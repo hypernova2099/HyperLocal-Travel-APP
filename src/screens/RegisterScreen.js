@@ -38,15 +38,16 @@ const RegisterScreen = ({ navigation }) => {
     }
 
     setLoading(true);
-    const result = await authService.register({ name, email, password });
-    setLoading(false);
-
-    if (result.success) {
+    try {
+      const result = await authService.register({ name, email, password });
       Alert.alert('Success', result.message || 'Registration successful', [
         { text: 'OK', onPress: () => navigation.navigate('Login') },
       ]);
-    } else {
-      Alert.alert('Registration Failed', result.error || 'Registration failed');
+    } catch (error) {
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to register. Please try again.';
+      Alert.alert('Registration Failed', errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 

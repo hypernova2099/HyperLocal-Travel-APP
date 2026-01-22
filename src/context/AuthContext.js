@@ -44,10 +44,11 @@ export const AuthProvider = ({ children }) => {
         
         return { success: true };
       }
-      return { success: false, error: 'Invalid response' };
+      return { success: false, error: 'Invalid response from server' };
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: error.message || 'Login failed' };
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to login. Please check your credentials and try again.';
+      return { success: false, error: errorMessage };
     }
   };
 
@@ -56,12 +57,13 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.register({ name, email, password });
       
       if (response.user) {
-        return { success: true, message: response.message };
+        return { success: true, message: response.message || 'Registration successful' };
       }
-      return { success: false, error: 'Registration failed' };
+      return { success: false, error: 'Invalid response from server' };
     } catch (error) {
       console.error('Registration error:', error);
-      return { success: false, error: error.message || 'Registration failed' };
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to register. Please try again.';
+      return { success: false, error: errorMessage };
     }
   };
 

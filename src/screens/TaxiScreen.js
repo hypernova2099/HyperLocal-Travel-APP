@@ -24,9 +24,12 @@ const TaxiScreen = ({ navigation }) => {
     setLoading(true);
     try {
       const data = await taxiService.getTaxis();
-      setTaxis(data);
+      setTaxis(data || []);
     } catch (error) {
       console.error('Error loading taxis:', error);
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to fetch taxis. Please try again.';
+      Alert.alert('Error', errorMessage);
+      setTaxis([]);
     } finally {
       setLoading(false);
     }

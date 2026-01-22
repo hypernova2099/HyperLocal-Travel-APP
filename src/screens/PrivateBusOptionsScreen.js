@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { tripService } from '../api/services';
@@ -37,6 +38,10 @@ const PrivateBusOptionsScreen = ({ route, navigation }) => {
       setBusOptions(data);
     } catch (error) {
       console.error('Error loading bus options:', error);
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to fetch bus options. Please try again.';
+      Alert.alert('Error', errorMessage, [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { placesService } from '../api/services';
@@ -26,9 +27,12 @@ const ExploreScreen = ({ route, navigation }) => {
     setLoading(true);
     try {
       const data = await placesService.getPlaces({ type });
-      setPlaces(data);
+      setPlaces(data || []);
     } catch (error) {
       console.error('Error loading places:', error);
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to fetch places. Please try again.';
+      Alert.alert('Error', errorMessage);
+      setPlaces([]);
     } finally {
       setLoading(false);
     }

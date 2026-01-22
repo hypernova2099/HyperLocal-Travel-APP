@@ -28,6 +28,9 @@ const SafetyScreen = ({ navigation }) => {
       setEmergencyPoints(data);
     } catch (error) {
       console.error('Error loading emergency points:', error);
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to fetch emergency points. Please try again.';
+      Alert.alert('Error', errorMessage);
+      setEmergencyPoints(null);
     } finally {
       setLoading(false);
     }

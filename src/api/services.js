@@ -1,119 +1,97 @@
 import apiClient from './apiClient';
-import * as mockApi from './mockApi';
 
-// Helper function to try real API and fallback to mock
-const tryApiWithFallback = async (apiCall, mockCall) => {
-  try {
-    const response = await apiCall();
-    return response.data || response;
-  } catch (error) {
-    console.log('API call failed, using mock data:', error.message);
-    return await mockCall();
-  }
+// Helper function to extract data from response or throw error
+const handleResponse = (response) => {
+  return response.data || response;
 };
 
-// Auth Services
+// Auth Services - NO MOCK FALLBACKS
 export const authService = {
   async register({ name, email, password }) {
-    return tryApiWithFallback(
-      () => apiClient.post('/api/auth/register', { name, email, password }),
-      () => mockApi.mockAuth.register({ name, email, password })
-    );
+    const response = await apiClient.post('/auth/register', { name, email, password });
+    return handleResponse(response);
   },
 
   async login({ email, password }) {
-    return tryApiWithFallback(
-      () => apiClient.post('/api/auth/login', { email, password }),
-      () => mockApi.mockAuth.login({ email, password })
-    );
+    const response = await apiClient.post('/auth/login', { email, password });
+    return handleResponse(response);
   },
 };
 
-// Bus/Routes Services
+// Bus/Routes Services - NO MOCK FALLBACKS
 export const busService = {
   async searchRoutes({ from, to }) {
-    return tryApiWithFallback(
-      () => apiClient.get(`/api/bus/search?from=${from}&to=${to}`),
-      () => mockApi.mockBus.searchRoutes({ from, to })
-    );
+    const response = await apiClient.get(`/bus/search?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+    return handleResponse(response);
   },
 
   async getRouteDetails(routeId) {
-    return tryApiWithFallback(
-      () => apiClient.get(`/api/bus/routes/${routeId}`),
-      () => mockApi.mockBus.getRouteDetails(routeId)
-    );
+    const response = await apiClient.get(`/bus/routes/${routeId}`);
+    return handleResponse(response);
   },
 
   async getLiveLocation(busId) {
-    return tryApiWithFallback(
-      () => apiClient.get(`/api/live-location/${busId}`),
-      () => mockApi.mockBus.getLiveLocation(busId)
-    );
+    const response = await apiClient.get(`/live-location/${busId}`);
+    return handleResponse(response);
   },
 };
 
-// Places Services
+// Places Services - NO MOCK FALLBACKS
 export const placesService = {
   async getPlacesAlongRoute({ routeId, type }) {
-    return tryApiWithFallback(
-      () => apiClient.get(`/api/places/along-route?routeId=${routeId}&type=${type}`),
-      () => mockApi.mockPlaces.getPlacesAlongRoute({ routeId, type })
-    );
+    const response = await apiClient.get(`/places/along-route?routeId=${routeId}&type=${encodeURIComponent(type)}`);
+    return handleResponse(response);
   },
 
   async getPlaces({ type }) {
-    return tryApiWithFallback(
-      () => apiClient.get(`/api/places?type=${type}`),
-      () => mockApi.mockPlaces.getPlaces({ type })
-    );
+    const response = await apiClient.get(`/places?type=${encodeURIComponent(type)}`);
+    return handleResponse(response);
   },
 };
 
-// Safety Services
+// Safety Services - NO MOCK FALLBACKS
 export const safetyService = {
   async getEmergencyPoints() {
-    return tryApiWithFallback(
-      () => apiClient.get('/api/emergency'),
-      () => mockApi.mockSafety.getEmergencyPoints()
-    );
+    const response = await apiClient.get('/emergency');
+    return handleResponse(response);
   },
 };
 
-// Taxi Services
+// Taxi Services - NO MOCK FALLBACKS
 export const taxiService = {
   async getTaxis() {
-    return tryApiWithFallback(
-      () => apiClient.get('/api/taxis'),
-      () => mockApi.mockTaxi.getTaxis()
-    );
+    const response = await apiClient.get('/taxis');
+    return handleResponse(response);
   },
 };
 
-// Day Plan Services
+// Day Plan Services - NO MOCK FALLBACKS (requires auth)
 export const dayPlanService = {
   async generatePlan({ duration, interests }) {
-    return tryApiWithFallback(
-      () => apiClient.post('/api/dayplan', { duration, interests }),
-      () => mockApi.mockDayPlan.generatePlan({ duration, interests })
-    );
+    const response = await apiClient.post('/dayplan', { duration, interests });
+    return handleResponse(response);
+  },
+
+  async getMyDayPlans() {
+    const response = await apiClient.get('/dayplan/my');
+    return handleResponse(response);
   },
 };
 
-// Trip Planning Services
+// Trip Planning Services - NO MOCK FALLBACKS
 export const tripService = {
   async planTrip({ from, to }) {
-    return tryApiWithFallback(
-      () => apiClient.post('/api/trip/plan', { from, to }),
-      () => mockApi.mockTripPlan.planTrip({ from, to })
-    );
+    const response = await apiClient.post('/trip/plan', { from, to });
+    return handleResponse(response);
   },
 
   async getPrivateBusOptions({ routeId, fromStop, toStop }) {
-    return tryApiWithFallback(
-      () => apiClient.get(`/api/bus/private-options?routeId=${routeId}&fromStop=${fromStop}&toStop=${toStop}`),
-      () => mockApi.mockPrivateBusOptions.getPrivateBusOptions({ routeId, fromStop, toStop })
-    );
+    const params = new URLSearchParams({
+      routeId,
+      fromStop: encodeURIComponent(fromStop),
+      toStop: encodeURIComponent(toStop),
+    });
+    const response = await apiClient.get(`/bus/private-options?${params.toString()}`);
+    return handleResponse(response);
   },
 };
-

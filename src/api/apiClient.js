@@ -1,10 +1,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Base API URL - update this when backend is ready
-const BASE_URL = 'https://api.example.com'; // Replace with actual backend URL
+// Real backend API URL
+const BASE_URL = 'http://172.21.30.116:8080/api';
 
-// Create axios instance
+// Create axios instance with real backend configuration
 const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
@@ -13,12 +13,16 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token from AsyncStorage
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.error('Error reading token from storage:', error);
     }
     return config;
   },
@@ -29,14 +33,30 @@ apiClient.interceptors.request.use(
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Handle 401 unauthorized - clear token and redirect to login
+  (response) => {
+    // Return response data directly for easier use
+    return response;
+  },
+  async (error) => {
+    // Handle 401 unauthorized - clear token and user data
     if (error.response?.status === 401) {
-      AsyncStorage.removeItem('token');
-      AsyncStorage.removeItem('user');
+      try {
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
+      } catch (storageError) {
+        console.error('Error clearing storage:', storageError);
+      }
     }
-    return Promise.reject(error);
+    
+    // Return error with user-friendly message
+    const errorMessage = error.response?.data?.message || 
+                        error.message || 
+                        'Network error. Please check your connection.';
+    
+    return Promise.reject({
+      ...error,
+      userMessage: errorMessage,
+    });
   }
 );
 

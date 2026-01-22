@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { dayPlanService } from '../api/services';
@@ -36,15 +37,18 @@ const DayPlanScreen = ({ navigation }) => {
 
   const handleGeneratePlan = async () => {
     if (interests.length === 0) {
+      Alert.alert('Error', 'Please select at least one interest');
       return;
     }
 
     setLoading(true);
     try {
       const data = await dayPlanService.generatePlan({ duration, interests });
-      setPlan(data);
+      setPlan(data.items || data); // Handle both formats
     } catch (error) {
       console.error('Error generating plan:', error);
+      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to generate plan. Please check your connection and try again.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
