@@ -48,12 +48,16 @@ const PrivateBusOptionsScreen = ({ route, navigation }) => {
   };
 
   const handleBusSelect = (bus) => {
-    // Navigate to PaymentScreen with bus details
-    navigation.navigate('Payment', {
-      bus,
-      fare: bus.fare,
+    // Navigate to Passenger Live Tracking screen
+    // (Payment flow remains available elsewhere if needed)
+    navigation.navigate('LiveTracking', {
+      busId: bus._id,
+      busName: bus.name,
+      // Keep these so we can extend UI later without breaking callers
       from,
       to,
+      fare: bus.fare,
+      bus,
     });
   };
 
