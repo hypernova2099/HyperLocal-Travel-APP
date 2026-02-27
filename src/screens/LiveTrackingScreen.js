@@ -16,7 +16,7 @@ import TimelineStopItem from '../components/TimelineStopItem';
 const LiveTrackingScreen = ({ route, navigation }) => {
   const { route: selectedRoute, from, to } = route.params || {};
   const [routeDetails, setRouteDetails] = useState(null);
-  const [activeStopIndex, setActiveStopIndex] = useState(1); // Mock active stop
+  const [activeStopIndex, setActiveStopIndex] = useState(1); // Demo active stop
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

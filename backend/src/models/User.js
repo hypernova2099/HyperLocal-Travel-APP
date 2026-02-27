@@ -4,7 +4,18 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
-  role: { type: String, default: 'user' },
+  // Role-based access: user | driver | admin
+  role: {
+    type: String,
+    enum: ['user', 'driver', 'admin'],
+    default: 'user',
+  },
+  // Assigned bus for approved drivers (used for live tracking)
+  assignedBus: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Bus',
+    default: null,
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

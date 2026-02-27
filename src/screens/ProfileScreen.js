@@ -84,6 +84,18 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {/* Driver Apply Button (user role only) */}
+        {user?.role === 'user' && (
+          <TouchableOpacity
+            style={styles.applyButton}
+            onPress={() => navigation.navigate('DriverApply')}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="id-card-outline" size={20} color={colors.primary} />
+            <Text style={styles.applyButtonText}>Apply to Become Driver</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
@@ -181,6 +193,23 @@ const styles = StyleSheet.create({
   },
   languageButtonTextActive: {
     color: colors.white,
+  },
+  applyButton: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    marginTop: spacing.sm,
+  },
+  applyButtonText: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '700',
   },
   logoutButton: {
     backgroundColor: colors.white,

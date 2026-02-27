@@ -11,6 +11,9 @@ const busRoutes = require('./routes/bus');
 const placesRoutes = require('./routes/places');
 const taxiRoutes = require('./routes/taxis');
 const dayPlanRoutes = require('./routes/dayplan');
+const driverRoutes = require('./routes/driver');
+const adminRoutes = require('./routes/admin');
+const liveRoutes = require('./routes/live');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +35,9 @@ app.use('/api/bus', busRoutes);
 app.use('/api/places', placesRoutes);
 app.use('/api/taxis', taxiRoutes);
 app.use('/api/dayplan', dayPlanRoutes);
+app.use('/api/driver', driverRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/live', liveRoutes);
 
 // Start server after DB connect
 const startServer = async () => {

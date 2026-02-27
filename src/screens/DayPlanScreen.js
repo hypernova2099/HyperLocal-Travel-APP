@@ -43,7 +43,9 @@ const DayPlanScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      const data = await dayPlanService.generatePlan({ duration, interests });
+      // Backend expects duration: "half" | "full"
+      const apiDuration = duration === 'fullDay' ? 'full' : 'half';
+      const data = await dayPlanService.generatePlan({ duration: apiDuration, interests });
       setPlan(data.items || data); // Handle both formats
     } catch (error) {
       console.error('Error generating plan:', error);

@@ -17,6 +17,7 @@ import SafetyScreen from '../screens/SafetyScreen';
 import TaxiScreen from '../screens/TaxiScreen';
 import DayPlanScreen from '../screens/DayPlanScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import DriverApplyScreen from '../screens/DriverApplyScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -174,6 +175,11 @@ const ProfileStack = () => {
         name="ProfileMain" 
         component={ProfileScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DriverApply"
+        component={DriverApplyScreen}
+        options={{ headerShown: false, presentation: 'card' }}
       />
     </Stack.Navigator>
   );

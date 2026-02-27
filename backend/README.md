@@ -25,6 +25,18 @@ MONGO_URI=mongodb://localhost:27017/smart_district
 JWT_SECRET=supersecretkey
 ```
 
+## Seed sample data
+```bash
+npm run seed
+```
+Seeds:
+- Bus routes, private buses, metro sample
+- Places (food/attraction/activity)
+- Taxi drivers
+- Admin and users (admin/driver/user)
+- DriverRequest (pending)
+- LiveLocation sample
+
 ## Run the server
 ```bash
 npm start
@@ -35,15 +47,6 @@ For development with auto-reload:
 ```bash
 npm run dev
 ```
-
-## Seed sample data
-```bash
-npm run seed
-```
-Seeds:
-- Bus routes, private buses, metro sample
-- Places (food/attraction/activity)
-- Taxi drivers
 
 ## API Mounts
 - `POST /api/auth/register`
@@ -56,6 +59,23 @@ Seeds:
 - `GET /api/taxis`
 - `POST /api/dayplan` (auth)
 - `GET /api/dayplan/my` (auth)
+ - `/api/driver/*` (driver applications)
+ - `/api/admin/*` (admin-only driver approval)
+ - `/api/live/*` (live bus locations)
+
+## Test Credentials
+
+- **Admin**
+  - Email: `admin@test.com`
+  - Password: `Admin@123`
+
+- **Driver**
+  - Email: `driver1@test.com`
+  - Password: `Driver@123`
+
+- **User**
+  - Email: `user@test.com`
+  - Password: `User@123`
 
 ## Project Structure
 ```

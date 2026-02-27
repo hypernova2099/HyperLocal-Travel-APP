@@ -5,7 +5,7 @@ const handleResponse = (response) => {
   return response.data || response;
 };
 
-// Auth Services - NO MOCK FALLBACKS
+// Auth Services (real backend only)
 export const authService = {
   async register({ name, email, password }) {
     const response = await apiClient.post('/auth/register', { name, email, password });
@@ -18,7 +18,7 @@ export const authService = {
   },
 };
 
-// Bus/Routes Services - NO MOCK FALLBACKS
+// Bus/Routes Services (real backend only)
 export const busService = {
   async searchRoutes({ from, to }) {
     const response = await apiClient.get(`/bus/search?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
@@ -31,12 +31,13 @@ export const busService = {
   },
 
   async getLiveLocation(busId) {
-    const response = await apiClient.get(`/live-location/${busId}`);
+    // Live location endpoint from backend
+    const response = await apiClient.get(`/live/${busId}`);
     return handleResponse(response);
   },
 };
 
-// Places Services - NO MOCK FALLBACKS
+// Places Services (real backend only)
 export const placesService = {
   async getPlacesAlongRoute({ routeId, type }) {
     const response = await apiClient.get(`/places/along-route?routeId=${routeId}&type=${encodeURIComponent(type)}`);
@@ -49,7 +50,7 @@ export const placesService = {
   },
 };
 
-// Safety Services - NO MOCK FALLBACKS
+// Safety Services (real backend only)
 export const safetyService = {
   async getEmergencyPoints() {
     const response = await apiClient.get('/emergency');
@@ -57,7 +58,7 @@ export const safetyService = {
   },
 };
 
-// Taxi Services - NO MOCK FALLBACKS
+// Taxi Services (real backend only)
 export const taxiService = {
   async getTaxis() {
     const response = await apiClient.get('/taxis');
@@ -65,7 +66,7 @@ export const taxiService = {
   },
 };
 
-// Day Plan Services - NO MOCK FALLBACKS (requires auth)
+// Day Plan Services (real backend only; requires auth)
 export const dayPlanService = {
   async generatePlan({ duration, interests }) {
     const response = await apiClient.post('/dayplan', { duration, interests });
@@ -78,7 +79,7 @@ export const dayPlanService = {
   },
 };
 
-// Trip Planning Services - NO MOCK FALLBACKS
+// Trip Planning Services (real backend only)
 export const tripService = {
   async planTrip({ from, to }) {
     const response = await apiClient.post('/trip/plan', { from, to });
@@ -86,12 +87,34 @@ export const tripService = {
   },
 
   async getPrivateBusOptions({ routeId, fromStop, toStop }) {
-    const params = new URLSearchParams({
+    const qs = `routeId=${encodeURIComponent(routeId)}&fromStop=${encodeURIComponent(fromStop)}&toStop=${encodeURIComponent(toStop)}`;
+    const response = await apiClient.get(`/bus/private-options?${qs}`);
+    return handleResponse(response);
+  },
+};
+
+// Driver Services (requires auth)
+export const driverService = {
+  async apply({ busNumber, operatorName, licenseNumber, routeId }) {
+    const response = await apiClient.post('/driver/apply', {
+      busNumber,
+      operatorName,
+      licenseNumber,
       routeId,
-      fromStop: encodeURIComponent(fromStop),
-      toStop: encodeURIComponent(toStop),
     });
-    const response = await apiClient.get(`/bus/private-options?${params.toString()}`);
+    return handleResponse(response);
+  },
+};
+
+// Live Tracking Services (driverOnly, no busId in body)
+export const liveService = {
+  async updateLiveLocation({ lat, lng, speed, heading }) {
+    const response = await apiClient.post('/live/update', {
+      lat,
+      lng,
+      speed,
+      heading,
+    });
     return handleResponse(response);
   },
 };

@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from '../api/services';
+import { onUnauthorized } from '../api/authEvents';
 
 export const AuthContext = createContext();
 
@@ -12,6 +13,11 @@ export const AuthProvider = ({ children }) => {
   // Check for existing auth on mount
   useEffect(() => {
     loadStoredAuth();
+    // If the API layer detects a 401, automatically logout.
+    const unsubscribe = onUnauthorized(() => {
+      logout();
+    });
+    return unsubscribe;
   }, []);
 
   const loadStoredAuth = async () => {

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { emitUnauthorized } from './authEvents';
 
 // Real backend API URL
 const BASE_URL = 'http://172.21.30.116:8080/api';
@@ -43,6 +44,7 @@ apiClient.interceptors.response.use(
       try {
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('user');
+        emitUnauthorized();
       } catch (storageError) {
         console.error('Error clearing storage:', storageError);
       }

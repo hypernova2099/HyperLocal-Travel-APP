@@ -1,10 +1,14 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const connectDB = require('./config/db');
 const BusRoute = require('./models/BusRoute');
 const Bus = require('./models/Bus');
 const Place = require('./models/Place');
 const TaxiDriver = require('./models/TaxiDriver');
+const User = require('./models/User');
+const DriverRequest = require('./models/DriverRequest');
+const LiveLocation = require('./models/LiveLocation');
 
 const seed = async () => {
   await connectDB(process.env.MONGO_URI);
@@ -15,6 +19,9 @@ const seed = async () => {
     Bus.deleteMany({}),
     Place.deleteMany({}),
     TaxiDriver.deleteMany({}),
+    User.deleteMany({}),
+    DriverRequest.deleteMany({}),
+    LiveLocation.deleteMany({}),
   ]);
 
   console.log('Inserting routes...');
@@ -51,7 +58,7 @@ const seed = async () => {
   });
 
   console.log('Inserting buses...');
-  await Bus.insertMany([
+  const insertedBuses = await Bus.insertMany([
     {
       routeId: route1._id,
       name: 'Mahanadi Travels (Pvt)',
@@ -89,6 +96,10 @@ const seed = async () => {
       farePerKm: 2.4,
     },
   ]);
+
+  // Ensure we have at least 2 buses to assign to drivers
+  const busForDriver1 = insertedBuses[0]?._id || null;
+  const busForDriver2 = insertedBuses[1]?._id || insertedBuses[0]?._id || null;
 
   console.log('Inserting places...');
   await Place.insertMany([
@@ -157,6 +168,67 @@ const seed = async () => {
       languages: ['English', 'Malayalam', 'Hindi'],
     },
   ]);
+
+  console.log('Inserting users (admin, drivers, normal user)...');
+  const adminPasswordHash = await bcrypt.hash('Admin@123', 10);
+  const driver1PasswordHash = await bcrypt.hash('Driver@123', 10);
+  const driver2PasswordHash = await bcrypt.hash('Driver2@123', 10);
+  const userPasswordHash = await bcrypt.hash('User@123', 10);
+
+  const adminUser = await User.create({
+    name: 'Admin',
+    email: 'admin@test.com',
+    passwordHash: adminPasswordHash,
+    role: 'admin',
+  });
+
+  const driverUser1 = await User.create({
+    name: 'Driver One',
+    email: 'driver1@test.com',
+    passwordHash: driver1PasswordHash,
+    role: 'driver',
+    assignedBus: busForDriver1,
+  });
+
+  const driverUser2 = await User.create({
+    name: 'Driver Two',
+    email: 'driver2@test.com',
+    passwordHash: driver2PasswordHash,
+    role: 'driver',
+    assignedBus: busForDriver2,
+  });
+
+  const normalUser = await User.create({
+    name: 'Normal User',
+    email: 'user@test.com',
+    passwordHash: userPasswordHash,
+    role: 'user',
+  });
+
+  console.log('Inserting pending driver request...');
+  await DriverRequest.create({
+    userId: normalUser._id,
+    busNumber: 'KL-07-AB-1234',
+    operatorName: 'Sample Operator',
+    licenseNumber: 'LIC123456',
+    routeId: route1._id,
+    status: 'pending',
+  });
+
+  console.log('Seeding live location for driver1 bus...');
+  if (driverUser1.assignedBus) {
+    await LiveLocation.findOneAndUpdate(
+      { busId: driverUser1.assignedBus },
+      {
+        lat: 9.965,
+        lng: 76.242,
+        speed: 30,
+        heading: 180,
+        lastUpdated: new Date(),
+      },
+      { new: true, upsert: true }
+    );
+  }
 
   console.log('Seeding complete.');
   await mongoose.connection.close();
