@@ -10,20 +10,42 @@ import {
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
-import { liveService } from '../api/services';
+import { liveService, driverService } from '../api/services';
 import { colors } from '../theme/colors';
 import { spacing, borderRadius } from '../theme/spacing';
 
 const DriverDashboardScreen = () => {
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const trackingRef = useRef(null);
   const hasShownSendErrorRef = useRef(false);
 
   const [isLive, setIsLive] = useState(false);
   const [starting, setStarting] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
+  const [assignedBus, setAssignedBus] = useState(user?.assignedBus || null);
+  const [assignedBusName, setAssignedBusName] = useState(null);
+  const [loadingBus, setLoadingBus] = useState(true);
 
-  const assignedBus = user?.assignedBus || null;
+  useEffect(() => {
+    const loadAssignedBus = async () => {
+      try {
+        const bus = await driverService.getAssignedBus();
+        if (bus?._id) {
+          setAssignedBus(bus._id);
+          setAssignedBusName(bus.name || String(bus._id));
+        } else {
+          setAssignedBus(null);
+        }
+      } catch (error) {
+        console.error('Error fetching assigned bus:', error);
+        setAssignedBus(user?.assignedBus || null);
+      } finally {
+        setLoadingBus(false);
+      }
+    };
+
+    loadAssignedBus();
+  }, [user?.assignedBus]);
 
   const stopTrip = async () => {
     try {
@@ -115,6 +137,13 @@ const DriverDashboardScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Driver Dashboard</Text>
+        <TouchableOpacity
+          style={styles.logoutIconButton}
+          onPress={logout}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="log-out-outline" size={22} color={colors.white} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
@@ -124,7 +153,11 @@ const DriverDashboardScreen = () => {
             <Text style={styles.label}>Assigned Bus</Text>
           </View>
           <Text style={styles.value}>
-            {assignedBus ? String(assignedBus) : 'No bus assigned. Contact admin.'}
+            {loadingBus
+              ? 'Loading...'
+              : assignedBus
+              ? assignedBusName || String(assignedBus)
+              : 'No bus assigned. Contact admin.'}
           </Text>
 
           <View style={[styles.row, { marginTop: spacing.md }]}>
@@ -193,12 +226,20 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl + 20,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.white,
+  },
+  logoutIconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { emitUnauthorized } from './authEvents';
 
 // Real backend API URL
-const BASE_URL = 'http://172.21.30.116:8080/api';
+const BASE_URL = "http://172.21.37.97:8080/api";
 
 // Create axios instance with real backend configuration
 const apiClient = axios.create({

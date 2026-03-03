@@ -11,6 +11,7 @@ import RouteOptionsScreen from '../screens/RouteOptionsScreen';
 import PrivateBusOptionsScreen from '../screens/PrivateBusOptionsScreen';
 import PaymentScreen from '../screens/PaymentScreen';
 import LiveTrackingScreen from '../screens/LiveTrackingScreen';
+import BookingConfirmationScreen from '../screens/BookingConfirmationScreen';
 import BusSearchScreen from '../screens/BusSearchScreen';
 import ExploreScreen from '../screens/ExploreScreen';
 import SafetyScreen from '../screens/SafetyScreen';
@@ -66,6 +67,14 @@ const HomeStack = () => {
       <Stack.Screen 
         name="LiveTracking" 
         component={LiveTrackingScreen}
+        options={{ 
+          headerShown: false,
+          presentation: 'card',
+        }}
+      />
+      <Stack.Screen 
+        name="BookingConfirmation" 
+        component={BookingConfirmationScreen}
         options={{ 
           headerShown: false,
           presentation: 'card',

@@ -95,8 +95,8 @@ const ExploreScreen = ({ route, navigation }) => {
           </View>
         ) : (
           <>
-            {places.map((place) => (
-              <PlaceCard key={place.id} place={place} />
+            {places.map((place, index) => (
+              <PlaceCard key={place._id || place.id || index} place={place} />
             ))}
             {places.length === 0 && (
               <View style={styles.emptyContainer}>

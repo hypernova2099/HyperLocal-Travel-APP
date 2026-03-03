@@ -1,6 +1,6 @@
 const BusRoute = require('../models/BusRoute');
 const Bus = require('../models/Bus');
-const { distanceAlongStops } = require('../utils/geo');
+const { calculateFare } = require('../utils/fare');
 
 // GET /api/bus/private-options
 const getPrivateBusOptions = async (req, res) => {
@@ -20,20 +20,8 @@ const getPrivateBusOptions = async (req, res) => {
       return res.json({ routeId, fromStop, toStop, buses: [] });
     }
 
-    // Determine stop indices
-    const findStopIndex = (name) => {
-      if (!name) return -1;
-      return route.stops.findIndex((s) => s.name?.toLowerCase() === name.toLowerCase());
-    };
-    const startIdx = findStopIndex(fromStop);
-    const endIdx = findStopIndex(toStop);
-
-    const validStart = startIdx !== -1 ? startIdx : 0;
-    const validEnd = endIdx !== -1 ? endIdx : route.stops.length - 1;
-    const distanceKm = distanceAlongStops(route.stops, Math.min(validStart, validEnd), Math.max(validStart, validEnd)) || 5;
-
     const busesWithFare = privateBuses.map((bus) => {
-      const fare = Math.round((bus.baseFare || 10) + (bus.farePerKm || 2) * distanceKm);
+      const fare = calculateFare(bus, route, fromStop, toStop);
       return {
         _id: bus._id,
         name: bus.name,
@@ -55,7 +43,7 @@ const getPrivateBusOptions = async (req, res) => {
   }
 };
 
-// GET /api/bus/routes/:routeId
+// GET /api/bus/route/:routeId
 const getRouteDetails = async (req, res) => {
   try {
     const { routeId } = req.params;
@@ -70,7 +58,23 @@ const getRouteDetails = async (req, res) => {
   }
 };
 
+// GET /api/bus/:busId
+const getBusById = async (req, res) => {
+  try {
+    const { busId } = req.params;
+    const bus = await Bus.findById(busId);
+    if (!bus) {
+      return res.status(404).json({ message: 'Bus not found' });
+    }
+    return res.json(bus);
+  } catch (error) {
+    console.error('getBusById error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   getPrivateBusOptions,
   getRouteDetails,
+  getBusById,
 };

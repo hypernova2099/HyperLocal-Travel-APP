@@ -89,7 +89,7 @@ const RouteOptionsScreen = ({ route, navigation }) => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Route Options */}
         {options.map((option, index) => (
-          <View key={index}>
+          <View key={option._id ? `${option._id}-${index}` : option.routeId || option.mode || index}>
             {/* Route Option Card */}
             <TouchableOpacity
               style={[
@@ -142,8 +142,8 @@ const RouteOptionsScreen = ({ route, navigation }) => {
                       <Ionicons name="restaurant-outline" size={18} color={colors.primary} />
                       <Text style={styles.categoryTitle}>Food Spots</Text>
                     </View>
-                    {option.placesAlongRoute.food.map((place) => (
-                      <PlaceCard key={place.id} place={place} />
+                    {option.placesAlongRoute.food.map((place, idx) => (
+                      <PlaceCard key={place._id || place.id || idx} place={place} />
                     ))}
                   </View>
                 )}
@@ -155,8 +155,8 @@ const RouteOptionsScreen = ({ route, navigation }) => {
                       <Ionicons name="bicycle-outline" size={18} color={colors.primary} />
                       <Text style={styles.categoryTitle}>Activities</Text>
                     </View>
-                    {option.placesAlongRoute.activities.map((place) => (
-                      <PlaceCard key={place.id} place={place} />
+                    {option.placesAlongRoute.activities.map((place, idx) => (
+                      <PlaceCard key={place._id || place.id || idx} place={place} />
                     ))}
                   </View>
                 )}
@@ -168,8 +168,8 @@ const RouteOptionsScreen = ({ route, navigation }) => {
                       <Ionicons name="camera-outline" size={18} color={colors.primary} />
                       <Text style={styles.categoryTitle}>Attractions</Text>
                     </View>
-                    {option.placesAlongRoute.attractions.map((place) => (
-                      <PlaceCard key={place.id} place={place} />
+                    {option.placesAlongRoute.attractions.map((place, idx) => (
+                      <PlaceCard key={place._id || place.id || idx} place={place} />
                     ))}
                   </View>
                 )}

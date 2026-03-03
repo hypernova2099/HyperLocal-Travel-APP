@@ -31,8 +31,17 @@ const driverOnly = async (req, res, next) => {
   }
 };
 
+// Only allow normal end-users (not drivers or admins)
+const userOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== 'user') {
+    return res.status(403).json({ message: 'User access required' });
+  }
+  return next();
+};
+
 module.exports = {
   adminOnly,
   driverOnly,
+  userOnly,
 };
 

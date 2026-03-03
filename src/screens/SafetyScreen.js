@@ -25,12 +25,38 @@ const SafetyScreen = ({ navigation }) => {
     setLoading(true);
     try {
       const data = await safetyService.getEmergencyPoints();
-      setEmergencyPoints(data);
+      // Backend returns an array of emergency Place documents
+      // Group them into hospitals / police / fire based on subtype
+      const grouped = {
+        hospitals: [],
+        police: [],
+        fire: [],
+      };
+
+      (data || []).forEach((place) => {
+        const subtype = (place.subtype || '').toLowerCase();
+        if (subtype === 'police') {
+          grouped.police.push(place);
+        } else if (subtype === 'fire') {
+          grouped.fire.push(place);
+        } else {
+          grouped.hospitals.push(place);
+        }
+      });
+
+      setEmergencyPoints(grouped);
     } catch (error) {
       console.error('Error loading emergency points:', error);
-      const errorMessage = error.userMessage || error.response?.data?.message || 'Unable to fetch emergency points. Please try again.';
-      Alert.alert('Error', errorMessage);
-      setEmergencyPoints(null);
+      if (error.response?.status === 404) {
+        Alert.alert('Info', 'No emergency data available');
+      } else {
+        const errorMessage =
+          error.userMessage ||
+          error.response?.data?.message ||
+          'Unable to fetch emergency points. Please try again.';
+        Alert.alert('Error', errorMessage);
+      }
+      setEmergencyPoints({ hospitals: [], police: [], fire: [] });
     } finally {
       setLoading(false);
     }
@@ -89,23 +115,23 @@ const SafetyScreen = ({ navigation }) => {
           </View>
         ) : (
           <>
-            {emergencyPoints?.hospitals?.map((hospital) => (
+            {emergencyPoints?.hospitals?.map((hospital, index) => (
               <EmergencyCard
-                key={hospital.id}
+                key={hospital._id || hospital.id || index}
                 emergency={hospital}
                 onCall={handleCall}
               />
             ))}
-            {emergencyPoints?.police?.map((police) => (
+            {emergencyPoints?.police?.map((police, index) => (
               <EmergencyCard
-                key={police.id}
+                key={police._id || police.id || index}
                 emergency={police}
                 onCall={handleCall}
               />
             ))}
-            {emergencyPoints?.fire?.map((fire) => (
+            {emergencyPoints?.fire?.map((fire, index) => (
               <EmergencyCard
-                key={fire.id}
+                key={fire._id || fire.id || index}
                 emergency={fire}
                 onCall={handleCall}
               />

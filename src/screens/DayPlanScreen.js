@@ -155,7 +155,7 @@ const DayPlanScreen = ({ navigation }) => {
             <Text style={styles.planTitle}>Your Day Plan</Text>
             {plan.map((item, index) => (
               <TimelineStopItem
-                key={item.id}
+                key={item._id || item.id || index}
                 stop={{
                   name: item.name,
                   time: item.time,

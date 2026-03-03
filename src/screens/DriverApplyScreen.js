@@ -66,7 +66,10 @@ const DriverApplyScreen = ({ navigation }) => {
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
-      const msg = error.userMessage || 'Unable to fetch data. Please try again.';
+      const msg =
+        error.response?.data?.message ||
+        error.userMessage ||
+        'Unable to fetch data. Please try again.';
       Alert.alert('Error', msg);
     } finally {
       setLoading(false);

@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.login({ email, password });
       
       if (response.token && response.user) {
+        console.log('AuthContext login user:', response.user);
         setToken(response.token);
         setUser(response.user);
         

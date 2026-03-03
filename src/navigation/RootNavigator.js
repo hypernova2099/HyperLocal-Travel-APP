@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import AppNavigator from './AppNavigator';
 import DriverStack from './DriverStack';
+import AdminNavigator from './AdminNavigator';
 import { colors } from '../theme/colors';
 
 const RootNavigator = () => {
@@ -21,7 +22,11 @@ const RootNavigator = () => {
   return (
     <NavigationContainer>
       {isAuthenticated ? (
-        user?.role === 'driver' ? <DriverStack /> : <AppNavigator />
+        user?.role === 'admin'
+          ? <AdminNavigator />
+          : user?.role === 'driver'
+          ? <DriverStack />
+          : <AppNavigator />
       ) : (
         <AuthNavigator />
       )}

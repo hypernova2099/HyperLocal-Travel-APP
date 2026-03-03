@@ -104,6 +104,11 @@ export const driverService = {
     });
     return handleResponse(response);
   },
+
+  async getAssignedBus() {
+    const response = await apiClient.get('/driver/assigned-bus');
+    return handleResponse(response);
+  },
 };
 
 // Live Tracking Services (driverOnly, no busId in body)
@@ -114,6 +119,19 @@ export const liveService = {
       lng,
       speed,
       heading,
+    });
+    return handleResponse(response);
+  },
+};
+
+// Booking Services (requires auth)
+export const bookingService = {
+  async createBooking({ busId, routeId, fromStop, toStop }) {
+    const response = await apiClient.post('/booking', {
+      busId,
+      routeId,
+      fromStop,
+      toStop,
     });
     return handleResponse(response);
   },

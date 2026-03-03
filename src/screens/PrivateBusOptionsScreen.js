@@ -48,16 +48,14 @@ const PrivateBusOptionsScreen = ({ route, navigation }) => {
   };
 
   const handleBusSelect = (bus) => {
-    // Navigate to Passenger Live Tracking screen
-    // (Payment flow remains available elsewhere if needed)
     navigation.navigate('LiveTracking', {
       busId: bus._id,
       busName: bus.name,
-      // Keep these so we can extend UI later without breaking callers
       from,
       to,
       fare: bus.fare,
       bus,
+      routeId,
     });
   };
 
@@ -88,9 +86,9 @@ const PrivateBusOptionsScreen = ({ route, navigation }) => {
           </View>
         ) : busOptions && busOptions.buses ? (
           <>
-            {busOptions.buses.map((bus) => (
+            {busOptions.buses.map((bus, index) => (
               <TouchableOpacity
-                key={bus._id}
+                key={bus._id || `${bus.name}-${index}`}
                 style={styles.busCard}
                 onPress={() => handleBusSelect(bus)}
                 activeOpacity={0.7}

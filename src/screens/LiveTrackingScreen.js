@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,12 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import apiClient from '../api/apiClient';
 import { busService } from '../api/services';
+import { AuthContext } from '../context/AuthContext';
 import { colors } from '../theme/colors';
 import { spacing, borderRadius } from '../theme/spacing';
 import TimelineStopItem from '../components/TimelineStopItem';
@@ -22,6 +25,7 @@ const LiveTrackingScreen = ({ route, navigation }) => {
   // Passenger live tracking params
   const busId = route?.params?.busId;
   const busName = route?.params?.busName;
+  const routeId = route?.params?.routeId;
 
   // Optional: if we arrived here from the older "route timeline" flow, keep it working.
   const selectedRoute = route?.params?.route;
@@ -41,6 +45,8 @@ const LiveTrackingScreen = ({ route, navigation }) => {
   const [status, setStatus] = useState('OFFLINE');
   const [loading, setLoading] = useState(isPassengerMode);
   const [errorText, setErrorText] = useState('');
+  const [routePolyline, setRoutePolyline] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
 
   // -----------------------------
   // Legacy Timeline Tracking State
@@ -48,6 +54,8 @@ const LiveTrackingScreen = ({ route, navigation }) => {
   const [routeDetails, setRouteDetails] = useState(null);
   const [activeStopIndex] = useState(1); // Demo active stop
   const [legacyLoading, setLegacyLoading] = useState(!isPassengerMode);
+
+  const { user } = useContext(AuthContext);
 
   const fetchLive = async () => {
     if (!busId || inFlightRef.current) return;
@@ -109,28 +117,133 @@ const LiveTrackingScreen = ({ route, navigation }) => {
   // Animate map to new marker position
   useEffect(() => {
     if (!isPassengerMode) return;
-    if (!liveLocation?.lat || !liveLocation?.lng) return;
     if (!mapRef.current) return;
-    try {
-      mapRef.current.animateToRegion(
-        {
-          latitude: liveLocation.lat,
-          longitude: liveLocation.lng,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        400
-      );
-    } catch (e) {
-      // ignore map animation errors
+
+    // If we have both user and bus positions, fit both
+    if (
+      userLocation &&
+      typeof liveLocation?.lat === 'number' &&
+      typeof liveLocation?.lng === 'number'
+    ) {
+      try {
+        mapRef.current.fitToCoordinates(
+          [
+            {
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            },
+            {
+              latitude: liveLocation.lat,
+              longitude: liveLocation.lng,
+            },
+          ],
+          {
+            edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+            animated: true,
+          }
+        );
+      } catch (e) {
+        // ignore fit errors
+      }
+      return;
     }
-  }, [isPassengerMode, liveLocation?.lat, liveLocation?.lng]);
+
+    // Otherwise, just focus on the bus
+    if (typeof liveLocation?.lat === 'number' && typeof liveLocation?.lng === 'number') {
+      try {
+        mapRef.current.animateToRegion(
+          {
+            latitude: liveLocation.lat,
+            longitude: liveLocation.lng,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          400
+        );
+      } catch (e) {
+        // ignore map animation errors
+      }
+    }
+  }, [isPassengerMode, liveLocation?.lat, liveLocation?.lng, userLocation]);
+
+  // -----------------------------
+  // Fetch bus->route polyline and user location
+  // -----------------------------
+  useEffect(() => {
+    if (!isPassengerMode || !busId) return;
+
+    const fetchRouteAndUser = async () => {
+      try {
+        // Fetch bus details to retrieve routeId
+        const busRes = await apiClient.get(`/bus/${busId}`);
+        const bus = busRes?.data;
+        if (bus?.routeId) {
+          // Fetch route polyline
+          const routeRes = await apiClient.get(`/bus/route/${bus.routeId}`);
+          const routeData = routeRes?.data;
+          if (Array.isArray(routeData?.polyline)) {
+            setRoutePolyline(routeData.polyline);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching route polyline:', error);
+      }
+
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          return;
+        }
+        const position = await Location.getCurrentPositionAsync({});
+        if (position?.coords) {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user location:', error);
+      }
+    };
+
+    fetchRouteAndUser();
+  }, [isPassengerMode, busId]);
 
   const speedKmh = useMemo(() => {
     const s = Number(liveLocation?.speed || 0);
     // Driver app posts expo-location speed (m/s). Convert to km/h.
     return Math.max(0, Math.round(s * 3.6));
   }, [liveLocation?.speed]);
+
+  // Haversine distance (km) between user and bus
+  const distanceKm = useMemo(() => {
+    if (!userLocation || !liveLocation?.lat || !liveLocation?.lng) {
+      return null;
+    }
+    const R = 6371; // km
+    const toRad = (val) => (val * Math.PI) / 180;
+
+    const lat1 = userLocation.latitude;
+    const lon1 = userLocation.longitude;
+    const lat2 = liveLocation.lat;
+    const lon2 = liveLocation.lng;
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }, [userLocation, liveLocation?.lat, liveLocation?.lng]);
+
+  const etaMinutes = useMemo(() => {
+    if (!distanceKm || !Number.isFinite(distanceKm) || speedKmh <= 0) {
+      return null;
+    }
+    // time (minutes) = distance (km) / speed (km/h) * 60
+    return Math.round((distanceKm / speedKmh) * 60);
+  }, [distanceKm, speedKmh]);
 
   const lastUpdatedSecAgo = useMemo(() => {
     const last = liveLocation?.lastUpdated ? new Date(liveLocation.lastUpdated).getTime() : null;
@@ -208,6 +321,25 @@ const LiveTrackingScreen = ({ route, navigation }) => {
                   longitudeDelta: 0.01,
                 }}
               >
+                {routePolyline.length > 0 && (
+                  <Polyline
+                    coordinates={routePolyline.map((point) => ({
+                      latitude: point[0],
+                      longitude: point[1],
+                    }))}
+                    strokeColor="blue"
+                    strokeWidth={4}
+                  />
+                )}
+
+                {userLocation && (
+                  <Marker
+                    coordinate={userLocation}
+                    title="You"
+                    pinColor={colors.info}
+                  />
+                )}
+
                 <Marker
                   coordinate={{
                     latitude: liveLocation.lat,
@@ -227,6 +359,12 @@ const LiveTrackingScreen = ({ route, navigation }) => {
 
           <View style={styles.statsCard}>
             <View style={styles.statsRow}>
+              <Text style={styles.statsLabel}>Distance</Text>
+              <Text style={styles.statsValue}>
+                {distanceKm == null ? '—' : `${distanceKm.toFixed(2)} km`}
+              </Text>
+            </View>
+            <View style={styles.statsRow}>
               <Text style={styles.statsLabel}>Speed</Text>
               <Text style={styles.statsValue}>{speedKmh} km/h</Text>
             </View>
@@ -234,6 +372,12 @@ const LiveTrackingScreen = ({ route, navigation }) => {
               <Text style={styles.statsLabel}>Last Updated</Text>
               <Text style={styles.statsValue}>
                 {lastUpdatedSecAgo === null ? '—' : `${lastUpdatedSecAgo} sec ago`}
+              </Text>
+            </View>
+            <View style={styles.statsRow}>
+              <Text style={styles.statsLabel}>ETA</Text>
+              <Text style={styles.statsValue}>
+                {etaMinutes == null ? 'Bus stopped' : `${etaMinutes} min`}
               </Text>
             </View>
             <View style={styles.statsRow}>
@@ -248,6 +392,23 @@ const LiveTrackingScreen = ({ route, navigation }) => {
               <Text style={styles.errorText}>{errorText}</Text>
             )}
           </View>
+
+          {user?.role === 'user' && (
+            <TouchableOpacity
+              style={styles.bookButton}
+              onPress={() =>
+                navigation.navigate('BookingConfirmation', {
+                  busId,
+                  busName,
+                  routeId,
+                  fromStop: from,
+                  toStop: to,
+                })
+              }
+            >
+              <Text style={styles.bookButtonText}>Book Ticket</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -527,6 +688,19 @@ const styles = StyleSheet.create({
   nextStopInstruction: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  bookButton: {
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.full,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

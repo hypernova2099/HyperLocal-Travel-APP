@@ -59,8 +59,8 @@ const TaxiScreen = ({ navigation }) => {
           </View>
         ) : (
           <>
-            {taxis.map((taxi) => (
-              <View key={taxi.id} style={styles.taxiCard}>
+            {taxis.map((taxi, index) => (
+              <View key={taxi._id || taxi.id || index} style={styles.taxiCard}>
                 <View style={styles.taxiInfo}>
                   <Text style={styles.driverName}>{taxi.driverName}</Text>
                   <Text style={styles.vehicle}>{taxi.vehicle}</Text>

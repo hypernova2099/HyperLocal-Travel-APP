@@ -89,7 +89,7 @@ const HomeScreen = ({ navigation }) => {
         {/* Grid of Tiles */}
         <View style={styles.grid}>
           {tiles.map((tile, index) => (
-            <View key={index} style={styles.gridItem}>
+            <View key={tile.label || index} style={styles.gridItem}>
               <IconTileButton
                 icon={tile.icon}
                 label={tile.label}

@@ -14,6 +14,8 @@ const dayPlanRoutes = require('./routes/dayplan');
 const driverRoutes = require('./routes/driver');
 const adminRoutes = require('./routes/admin');
 const liveRoutes = require('./routes/live');
+const emergencyRoutes = require('./routes/emergency');
+const bookingRoutes = require('./routes/booking');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,6 +40,8 @@ app.use('/api/dayplan', dayPlanRoutes);
 app.use('/api/driver', driverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/live', liveRoutes);
+app.use('/api/emergency', emergencyRoutes);
+app.use('/api/booking', bookingRoutes);
 
 // Start server after DB connect
 const startServer = async () => {
